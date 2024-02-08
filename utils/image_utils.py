@@ -8,6 +8,8 @@ from PIL import Image
 import os
 import glob
 import matplotlib.pyplot as plt
+from IPython import get_ipython
+import numpy as np
 
 
 def convert_RGB_to_Grayscale(img_rgb_folder, img_gray_folder, verbose=False):
@@ -54,3 +56,43 @@ def convert_RGB_to_Grayscale(img_rgb_folder, img_gray_folder, verbose=False):
 
     # Print the completion message
     print(f"Converted all the images in {img_rgb_folder} to grayscale and saved in {img_gray_folder}.")
+
+
+def display_numpy_arrays_as_images():
+    '''This function enables the display of numpy arrays as images in Jupyter Notebook.
+    '''
+    
+    def array2png(arr):
+        '''This function converts a numpy array to a PNG image.
+        
+        Parameters:
+        -----------
+        arr: numpy array
+            The input numpy array.
+        
+        Returns:
+        --------
+        PIL.Image
+            The PNG image.
+        '''
+        # Check if the input is a 2D or 3D array
+        if 2 <= len(arr.shape) <= 3:
+            return Image.fromarray(np.array(np.clip(arr, 0, 1) * 255,
+                                            dtype=np.uint8))._repr_png_()
+        else:
+            # If the input is not a 2D or 3D array, return a blank image
+            return Image.fromarray(np.zeros([1, 1],
+                                            dtype=np.uint8))._repr_png_()
+        
+    def array2text(obj, p, cycle):
+        if len(obj.shape) < 2:
+            print(repr(obj))
+        
+        if 2 <= len(obj.shape) <= 3:
+            pass
+        else:
+            print(f'<array of shape {obj.shape}>')
+
+    # Register the display function
+    get_ipython().display_formatter.formatters['image/png'].for_type(np.ndarray, array2png)
+    get_ipython().display_formatter.formatters['text/plain'].for_type(np.ndarray, array2text)
