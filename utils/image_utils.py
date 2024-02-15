@@ -9,6 +9,7 @@ import os
 import glob
 import matplotlib.pyplot as plt
 from IPython import get_ipython
+from IPython.display import display_html
 import numpy as np
 
 
@@ -96,3 +97,21 @@ def display_numpy_arrays_as_images():
     # Register the display function
     get_ipython().display_formatter.formatters['image/png'].for_type(np.ndarray, array2png)
     get_ipython().display_formatter.formatters['text/plain'].for_type(np.ndarray, array2text)
+
+
+
+# Display the answer in a hoverable way
+_style_inline = """<style>
+.einops-answer {
+    color: transparent;
+    padding: 5px 15px;
+    background-color: #def;
+}
+.einops-answer:hover { color: blue; } 
+</style>
+"""
+def show_tensors_as_html(x):
+    display_html(
+        _style_inline
+        + "<h4>Answer is: <span class='einops-answer'>{x}</span> (hover to see)</h4>".format(x=tuple(x)),
+        raw=True)
