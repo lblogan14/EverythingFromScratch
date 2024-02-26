@@ -1,0 +1,13 @@
+beautifulsoup4==4.12.3
+einops==0.7.0
+ipython==8.21.0
+jupyterlab==4.0.12
+matplotlib==3.8.2
+notebook==7.0.7
+numpy==1.26.3
+pip==23.3.1
+python==3.12.1
+torch==2.2.1+cu118
+torchaudio==2.2.1+cu118
+torchvision==0.17.1+cu118
+tqdm==4.66.1
