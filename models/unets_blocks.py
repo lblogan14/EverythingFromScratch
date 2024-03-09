@@ -292,3 +292,87 @@ class OutConv(nn.Module):
         x = self.conv(x)
 
         return x
+    
+
+class ResNetBlock2D(nn.Module):
+    '''ResNet block for 2D data'''
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int =3, stride: int =1, padding: int =0, padding_mode:str ='zeros', \
+                 mid_channel_multiplier: int =1, dropout: bool =False):
+        '''Constructor for ResNetBlock2D class
+
+        Parameters
+        ----------
+        in_channels: int
+            Number of input channels
+        out_channels: int
+            Number of output channels
+        kernel_size: int
+            Size of the kernel, default is 3
+        stride: int
+            Stride of the kernel, default is 1
+        padding: int
+            Padding of the kernel, default is 0
+        padding_mode: str
+            Padding mode, default is 'zeros'
+        mid_channel_multiplier: int
+            Middle channel multiplier, default is 1 
+        dropout: bool
+            Whether to use dropout, default is False
+        '''
+        super(ResNetBlock2D, self).__init__()
+
+        # initialize block layers
+        layers = []
+        # first normalization and activation
+        layers.append(nn.BatchNorm2d(in_channels))
+        layers.append(nn.ReLU())
+        # first convolution
+        layers.append(nn.Conv2d(in_channels,
+                                in_channels * mid_channel_multiplier,
+                                kernel_size=kernel_size,
+                                stride=stride,
+                                padding=padding,
+                                padding_mode=padding_mode,))
+        
+        # if dropout is used
+        if dropout:
+            layers.append(nn.Dropout2d(p=0.2))
+
+        # second normalization and activation
+        layers.append(nn.BatchNorm2d(in_channels * mid_channel_multiplier))
+        layers.append(nn.ReLU())
+        # second convolution
+        layers.append(nn.Conv2d(in_channels * mid_channel_multiplier,
+                                out_channels,
+                                kernel_size=kernel_size,
+                                stride=stride,
+                                padding=padding,
+                                padding_mode=padding_mode))
+        
+        # create the block
+        self.block = nn.Sequential(*layers)
+        # identity mapping (skip connection)
+        self.identity_mapping = nn.Sequential()
+        if stride != 1 or in_channels != out_channels:
+            self.identity_mapping = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, padding=0),
+                nn.BatchNorm2d(out_channels)
+            )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        '''Forward pass for ResNetBlock2D class
+
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input tensor
+        
+        Returns
+        -------
+        torch.Tensor
+            Output tensor
+        '''
+        out = self.block(x)
+        # add identity mapping (skip connection)
+        out += self.identity_mapping(out)
+        return out

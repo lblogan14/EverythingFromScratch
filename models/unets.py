@@ -49,3 +49,41 @@ class VanillaUNet(nn.Module):
         x, dec_features = self.decoder(x, enc_features)
 
         return x, enc_features, dec_features
+    
+
+class ResUNet2D(nn.Module):
+    '''Residual U-Net'''
+    def __init__(self, encoder: nn.Module, decoder: nn.Module):
+        '''Constructor for ResUNet2d class
+        
+        Parameters
+        ----------
+        encoder: nn.Module
+            Encoder instance
+        decoder: nn.Module
+            Decoder instance
+        '''
+        super(ResUNet2D, self).__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+
+    def forward(self, x: torch.Tensor) \
+        -> Tuple[torch.Tensor, Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+        '''Forward pass for ResUNet2d class
+        
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input tensor
+            
+        Returns
+        -------
+        Tuple[torch.Tensor, Dict[str, torch.Tensor], Dict[str, torch.Tensor]]
+            Tuple of output tensor, encoder features and decoder features
+        '''
+        # encoding path
+        x, enc_features = self.encoder(x)
+        # decoding path
+        x, dec_features = self.decoder(x, enc_features)
+
+        return x, enc_features, dec_features
