@@ -51,7 +51,7 @@ class VanillaUNet(nn.Module):
         return x, enc_features, dec_features
     
 
-class ResUNet2d(nn.Module):
+class ResUNet2D(nn.Module):
     '''Residual U-Net'''
     def __init__(self, encoder: nn.Module, decoder: nn.Module):
         '''Constructor for ResUNet2d class
@@ -63,7 +63,7 @@ class ResUNet2d(nn.Module):
         decoder: nn.Module
             Decoder instance
         '''
-        super(ResUNet2d, self).__init__()
+        super(ResUNet2D, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
 
