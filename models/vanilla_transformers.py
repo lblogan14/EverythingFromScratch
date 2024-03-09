@@ -1,13 +1,14 @@
 '''The original Transformer model from the paper "Attention is All You Need" (Vaswani et al., 2017)
 Contributer: Bin Liu
 Created Date: 2024-01-30
-Last Updated: 2024-01-30
+Last Updated: 2024-03-09
 
 This file may contain multiple implementations of the original Transformer model but with different methods of implementation.
 The goal is to provide different ways to implement the same model to help readers understand the model better.
 '''
 
 # Typical imports
+from typing import Optional, Tuple
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -18,7 +19,7 @@ import math
 It is used to capture the relationship between different words in the input sequence.
 '''
 class MultiHeadAttention(nn.Module):
-    def __init__(self, d_model, num_heads):
+    def __init__(self, d_model: int, num_heads: int):
         '''Initialize the multi-head attention mechanism.
         
         Parameters:
@@ -45,7 +46,8 @@ class MultiHeadAttention(nn.Module):
         self.W_o = nn.Linear(d_model, d_model)
 
 
-    def scaled_dot_product_attention(self, Q, K, V, mask=None):
+    def scaled_dot_product_attention(self, Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, mask: Optional[torch.Tensor] =None) \
+        -> torch.Tensor:
         '''The scaled dot-product attention mechanism.
         
         Parameters:
@@ -80,7 +82,7 @@ class MultiHeadAttention(nn.Module):
         return output
     
     
-    def split_heads(self, x):
+    def split_heads(self, x: torch.Tensor) -> torch.Tensor:
         '''Split the input tensor into multiple heads.
         
         Parameters:
@@ -102,7 +104,7 @@ class MultiHeadAttention(nn.Module):
 
         return x
     
-    def combine_heads(self, x):
+    def combine_heads(self, x: torch.Tensor) -> torch.Tensor:
         '''Combine the heads into a single tensor.
         
         Parameters:
@@ -131,7 +133,8 @@ class MultiHeadAttention(nn.Module):
         return x
     
 
-    def forward(self, Q, K, V, mask=None):
+    def forward(self, Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, mask: Optional[: torch.Tensor]=None) \
+        -> torch.Tensor:
         '''The forward pass of the multi-head attention mechanism.
         
         Parameters:
@@ -174,7 +177,7 @@ class MultiHeadAttention(nn.Module):
 It is applied to each position in the input sequence independently and identically.
 '''
 class PositionWiseFeedForward(nn.Module):
-    def __init__(self, d_model, d_ff):
+    def __init__(self, d_model: int, d_ff: int):
         '''Initialize the position-wise feedforward network.
         
         Parameters:
@@ -191,7 +194,7 @@ class PositionWiseFeedForward(nn.Module):
         # Initialize the activation function
         self.activation = nn.ReLU()
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         '''The forward pass of the position-wise feedforward network.
         
         Parameters:
@@ -216,7 +219,7 @@ class PositionWiseFeedForward(nn.Module):
 It is added to the input sequence before feeding it into the multi-head attention mechanism.
 '''
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, max_seq_length):
+    def __init__(self, d_model: int, max_seq_length: int):
         '''Initialize the positional encoding.
         
         Parameters:
@@ -246,7 +249,7 @@ class PositionalEncoding(nn.Module):
         '''The `register_buffer` method provides a way to add tensors as buffers to a PyTorch module, 
         allowing us to store and manipulate additional information that is not considered a model parameter.'''
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         '''The forward pass of the positional encoding.
         
         Parameters:
@@ -273,7 +276,7 @@ class PositionalEncoding(nn.Module):
 It consists of a multi-head attention mechanism, a position-wise feedforward network, and residual connections with layer normalization.
 '''
 class TransformerEncoderLayer(nn.Module):
-    def __init__(self, d_model, num_heads, d_ff, dropout):
+    def __init__(self, d_model: int, num_heads: int, d_ff: int, dropout: float):
         '''Initialize the Transformer encoder layer.
         
         Parameters:
@@ -298,7 +301,7 @@ class TransformerEncoderLayer(nn.Module):
         # Initialize the dropout layers
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x, mask):
+    def forward(self, x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
         '''The forward pass of the Transformer encoder layer.
         
         Parameters:
@@ -338,7 +341,7 @@ class TransformerEncoderLayer(nn.Module):
 It consists of two multi-head attention mechanisms, a position-wise feedforward network, and residual connections with layer normalization.
 '''
 class TransformerDecoderLayer(nn.Module):
-    def __init__(self, d_model, num_heads, d_ff, dropout):
+    def __init__(self, d_model: int, num_heads: int, d_ff: int, dropout: float):
         '''Initialize the Transformer decoder layer.
         
         Parameters:
@@ -366,7 +369,8 @@ class TransformerDecoderLayer(nn.Module):
         # Initialize the dropout layers
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x, encoder_output, source_mask, target_mask):
+    def forward(self, x: torch.Tensor, encoder_output: torch.Tensor, source_mask: torch.Tensor, target_mask: torch.Tensor) \
+        -> torch.Tensor:
         '''The forward pass of the Transformer decoder layer.
         
         Parameters:
@@ -420,7 +424,8 @@ class TransformerDecoderLayer(nn.Module):
 It consists of a stack of Transformer encoder layers and Transformer decoder layers.
 '''
 class Transformer(nn.Module):
-    def __init__(self, source_vocab_size, target_vocab_size, d_model, num_heads, num_layers, d_ff, max_seq_length, dropout):
+    def __init__(self, source_vocab_size: int, target_vocab_size: int, d_model: int, num_heads: int, num_layers: int, d_ff: int, \
+                 max_seq_length: int, dropout: float):
         '''Initialize the Transformer model.
         
         Parameters:
@@ -470,7 +475,7 @@ class Transformer(nn.Module):
         # Initialize the dropout layer
         self.dropout = nn.Dropout(dropout)
 
-    def generate_mask(self, source, target):
+    def generate_mask(self, source: torch.Tensor, target: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         '''Generate the mask tensors for the input and output sequences.
         
         Parameters:
@@ -482,10 +487,8 @@ class Transformer(nn.Module):
             
         Returns:
         -------
-        torch.Tensor
-            The mask tensor for the input sequence with shape (batch_size, source_seq_len, source_seq_len).
-        torch.Tensor
-            The mask tensor for the output sequence with shape (batch_size, target_seq_len, target_seq_len).
+        Tuple[torch.Tensor, torch.Tensor]
+            The mask tensors for the input and output sequences.
         '''
         # Generate the mask tensor for the input sequence
         source_mask = (source != 0).unsqueeze(1).unsqueeze(2) # (batch_size, 1, 1, source_seq_len)
@@ -500,7 +503,7 @@ class Transformer(nn.Module):
 
         return source_mask, target_mask
     
-    def forward(self, source, target):
+    def forward(self, source: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         '''The forward pass of the Transformer model.
         
         Parameters:
