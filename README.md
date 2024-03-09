@@ -5,6 +5,7 @@ This is the repository to build everything from scratch to fully understand the 
 To better understand the beauty of the model structures, the same model may be implemented in different methods.
 
 <h3> Installation </h3>
+
 After creating and activating a virtual environment, users can install the required packages by running the following command (assuming users have already installed `python` and `pip`):
 ```bash
 pip install -r requirements.txt
