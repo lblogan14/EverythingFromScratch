@@ -8,7 +8,7 @@ Just like building lego blocks, these blocks can be used to build different deep
 Consider to use these blocks to build all deep learning models if possible.
 '''
 
-from typing import Optional
+from typing import Optional, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -376,3 +376,80 @@ class ResNetBlock2D(nn.Module):
         # add identity mapping (skip connection)
         out += self.identity_mapping(out)
         return out
+    
+
+class AttentionGate2D(nn.Module):
+    '''Attention gate for 2D data'''
+    def __init__(self, F_g: int, F_l: int, F_int: int):
+        '''Constructor for AttentionGate2D class
+
+        Parameters
+        ----------
+        F_g: int
+            Number of input channels for the gating signal (usually the outputs of the decoder)
+        F_l: int
+            Number of input channels for the local signal (usually the outputs of the encoder)
+        F_int: int
+            Number of intermediate channels for the attention mechanism
+        '''
+        super(AttentionGate2D, self).__init__()
+
+        # `F_g`` represents the number of feature channels in the gating signal.
+        # (Gating Feature Dimension) 
+        # It carries high-level contextual information that is used to guide the attention 
+        # mechanism on where to focus in the feature map coming from the encoder.
+        self.W_g = nn.Sequential(
+            nn.Conv2d(F_g, F_int, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(F_int)
+        )
+        # `F_l`` represents the number of feature channels in the local signal. 
+        # (Lower-level Feature Dimension)
+        # Those are the features to which the attention mechanism is applied, allowing the model 
+        # to selectively focus on parts of the feature map that are more relevant for 
+        # reconstructing the output in the decoder.
+        self.W_x = nn.Sequential(
+            nn.Conv2d(F_l, F_int, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(F_int)
+        )
+
+        # `F_int` represents the number of intermediate channels for the attention mechanism.
+        # (Intermediate Feature Dimension)
+        # This is used to control the capacity of the attention mechanism, reducing the 
+        # dimensionality of the features to make the attention mechanism more efficient.
+
+        # `psi` is the output of the attention mechanism.
+        # It is a feature map with the same spatial dimensions as the input feature map,
+        # but with a single channel.
+        # The `psi` feature map serves as a gating coefficient that ranges between 0 and 1
+        # for each spatial location, indicating the importance of each feature at that location.
+        # Multiplying `psi` with the original lower-level feature map (`F_l`) allows the network
+        # to focus on important features while diminishing the less relevant ones.
+        self.psi = nn.Sequential(
+            nn.Conv2d(F_int, 1, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(1),
+            nn.Sigmoid()
+        )
+
+        self.relu = nn.ReLU()
+
+    def forward(self, g: torch.Tensor, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        '''Forward pass for AttentionGate2D class
+
+        Parameters
+        ----------
+        g: torch.Tensor
+            Gating signal tensor
+        x: torch.Tensor
+            Local signal tensor
+        
+        Returns
+        -------
+        Tuple[torch.Tensor, torch.Tensor]
+            Tuple of output tensor and attention tensor
+        '''
+        g1 = self.W_g(g)
+        x1 = self.W_x(x)
+        psi = self.relu(g1 + x1)
+        attention_coef = self.psi(psi)
+
+        return x * attention_coef, attention_coef

@@ -87,3 +87,41 @@ class ResUNet2D(nn.Module):
         x, dec_features = self.decoder(x, enc_features)
 
         return x, enc_features, dec_features
+    
+
+class ResUNet2D_Attention(nn.Module):
+    '''Residual U-Net with attention gates'''
+    def __init__(self, encoder: nn.Module, decoder: nn.Module):
+        '''Constructor for ResUNet2D_Attention class
+        
+        Parameters
+        ----------
+        encoder: nn.Module
+            Encoder instance
+        decoder: nn.Module
+            Decoder instance
+        '''
+        super(ResUNet2D_Attention, self).__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+
+    def forward(self, x: torch.Tensor) \
+        -> Tuple[torch.Tensor, Dict[str, torch.Tensor], Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+        '''Forward pass for ResUNet2D_Attention class
+        
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input tensor
+        
+        Returns
+        -------
+        Tuple[torch.Tensor, Dict[str, torch.Tensor], Dict[str, torch.Tensor], Dict[str, torch.Tensor]]
+            Tuple of output tensor, encoder features, decoder features and attention maps
+        '''
+        # encoding path
+        x, enc_features = self.encoder(x)
+        # decoding path
+        x, dec_features, att_maps = self.decoder(x, enc_features)
+
+        return x, enc_features, dec_features, att_maps
